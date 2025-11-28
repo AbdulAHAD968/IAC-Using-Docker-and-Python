@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AbuseIPDB - CMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .abuseipdb-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .scan-section {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .input-group button {
+            padding: 10px 20px;
+        }
+
+        .check-type-selector {
+            margin-bottom: 20px;
+        }
+
+        .check-type-selector label {
+            margin-right: 20px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .check-type-selector input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-card.threat {
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-card.clean {
+            border-left: 4px solid #28a745;
+        }
+
+        .result-card.suspicious {
+            border-left: 4px solid #ffc107;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-title {
+            word-break: break-all;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .risk-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .risk-badge.critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .risk-badge.high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .risk-badge.medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .risk-badge.low {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .risk-badge.clean {
+            background: #28a745;
+            color: white;
+        }
+
+        .result-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            flex: 0 0 35%;
+        }
+
+        .info-value {
+            text-align: right;
+            color: #333;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .abuse-score {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .abuse-score-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .abuse-score-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .abuse-score.critical .abuse-score-value {
+            color: #dc3545;
+        }
+
+        .abuse-score.high .abuse-score-value {
+            color: #fd7e14;
+        }
+
+        .abuse-score.medium .abuse-score-value {
+            color: #ffc107;
+        }
+
+        .abuse-score.low .abuse-score-value {
+            color: #17a2b8;
+        }
+
+        .abuse-score.clean .abuse-score-value {
+            color: #28a745;
+        }
+
+        .comment-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            background: white;
+            border-left: 3px solid #007bff;
+            border-radius: 2px;
+        }
+
+        .comment-date {
+            font-size: 11px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .history-table thead {
+            background: #007bff;
+            color: white;
+        }
+
+        .history-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .history-table .scan-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .history-table .scan-link:hover {
+            text-decoration: underline;
+        }
+
+        .risk-score {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+            background: #f0f0f0;
+        }
+
+        .risk-score.critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .risk-score.high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .risk-score.medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .risk-score.low {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .tabs-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .api-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #004085;
+        }
+
+        .api-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .usage-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .label-badge {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .label-badge.proxy {
+            background: #17a2b8;
+        }
+
+        .label-badge.vpn {
+            background: #fd7e14;
+        }
+
+        .label-badge.hosting {
+            background: #007bff;
+        }
+
+        .label-badge.tor {
+            background: #6f42c1;
+        }
+
+        .label-badge.isp {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>AbuseIPDB Check</h1>
+                <p class="subtitle">Check IP reputation against abuse database</p>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="btn btn-info btn-small">Dashboard</a>
+                <a href="/virus-total" class="btn btn-info btn-small">VirusTotal</a>
+                <a href="/abuseipdb" class="btn btn-info btn-small active">AbuseIPDB</a>
+                <a href="/ssh-manager" class="btn btn-info btn-small">SSH Manager</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content abuseipdb-container">
+            <div class="api-info">
+                <strong>ℹ️ AbuseIPDB Integration</strong>
+                Check IP addresses for abuse reports across the AbuseIPDB database. Get comprehensive reputation scoring and abuse history.
+            </div>
+
+            <!-- Status Messages -->
+            <div id="status-message" class="status-message"></div>
+
+            <!-- Check Section -->
+            <section class="scan-section">
+                <h2>🔍 Check IP Reputation</h2>
+                <p class="tabs-subtitle">Enter an IP address to check its abuse reputation</p>
+
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="check-input" 
+                        placeholder="Enter IP address (e.g., 192.168.1.1)..."
+                    >
+                    <button class="btn btn-primary" onclick="performAbuseIPDBCheck()">
+                        <span id="check-btn-text">Check</span>
+                        <span id="check-spinner" class="loading-spinner" style="display: none; margin-left: 10px;"></span>
+                    </button>
+                </div>
+
+                <div class="usage-info">
+                    <strong>💡 Tip:</strong> Enter a public IP address to check if it has been reported for abuse, spam, or suspicious activity.
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" style="display: none;">
+                <h2>📊 IP Reputation Report</h2>
+                <div id="results-container" class="results-grid"></div>
+            </section>
+
+            <!-- History Section -->
+            <section class="history-section">
+                <h2>📜 Check History</h2>
+                <button class="btn btn-info" onclick="loadCheckHistory()">Refresh History</button>
+                <div id="history-container" style="margin-top: 20px;">
+                    <p class="text-muted">Loading check history...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Result Details Modal -->
+    <div id="result-details-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="details-title">IP Details</h2>
+                <button class="modal-close" onclick="closeModal('result-details-modal')">&times;</button>
+            </div>
+            <div class="modal-body" id="details-body">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('result-details-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = '/api';
+        let checkHistory = [];
+
+        // Validate IP Address
+        function isValidIP(ip) {
+            const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipv4Regex.test(ip)) return false;
+            
+            const parts = ip.split('.');
+            return parts.every(part => {
+                const num = parseInt(part, 10);
+                return num >= 0 && num <= 255;
+            });
+        }
+
+        // Perform AbuseIPDB Check
+        async function performAbuseIPDBCheck() {
+            const input = document.getElementById('check-input').value.trim();
+
+            if (!input) {
+                showMessage('Please enter an IP address', 'error');
+                return;
+            }
+
+            if (!isValidIP(input)) {
+                showMessage('Please enter a valid IP address', 'error');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('check-btn-text').style.display = 'none';
+            document.getElementById('check-spinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch(`${API_BASE}/abuseipdb-check`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ip_address: input
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    displayCheckResults(data);
+                    addToHistory(input, data);
+                    showMessage('IP check completed successfully!', 'success');
+                } else {
+                    showMessage(data.error || 'Check failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error performing check: ' + error.message, 'error');
+            } finally {
+                document.getElementById('check-btn-text').style.display = 'inline';
+                document.getElementById('check-spinner').style.display = 'none';
+            }
+        }
+
+        // Display Check Results
+        function displayCheckResults(data) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = '';
+
+            if (data.results) {
+                const card = createResultCard(data.results);
+                resultsContainer.appendChild(card);
+            }
+
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Create Result Card
+        function createResultCard(result) {
+            const card = document.createElement('div');
+            
+            // Determine risk level
+            let riskLevel = 'clean';
+            let riskClass = 'clean';
+            const abuseScore = result.abuse_score || 0;
+            
+            if (abuseScore >= 75) {
+                riskLevel = 'CRITICAL';
+                riskClass = 'critical';
+            } else if (abuseScore >= 50) {
+                riskLevel = 'HIGH';
+                riskClass = 'high';
+            } else if (abuseScore >= 25) {
+                riskLevel = 'MEDIUM';
+                riskClass = 'medium';
+            } else if (abuseScore > 0) {
+                riskLevel = 'LOW';
+                riskClass = 'low';
+            } else {
+                riskLevel = 'CLEAN';
+                riskClass = 'clean';
+            }
+
+            card.className = `result-card ${riskClass === 'clean' ? 'clean' : 'threat'}`;
+            
+            // Build labels
+            let labelsHtml = '';
+            if (result.labels && Array.isArray(result.labels)) {
+                labelsHtml = result.labels.map(label => {
+                    let badgeClass = 'proxy';
+                    if (label.toLowerCase().includes('vpn')) badgeClass = 'vpn';
+                    if (label.toLowerCase().includes('hosting')) badgeClass = 'hosting';
+                    if (label.toLowerCase().includes('tor')) badgeClass = 'tor';
+                    if (label.toLowerCase().includes('isp')) badgeClass = 'isp';
+                    return `<span class="label-badge ${badgeClass}">${escapeHtml(label)}</span>`;
+                }).join('');
+            }
+
+            // Build comments
+            let commentsHtml = '';
+            if (result.reports && result.reports.length > 0) {
+                commentsHtml = `
+                    <div class="comment-box">
+                        ${result.reports.slice(0, 5).map(report => `
+                            <div class="comment-item">
+                                <strong>Report:</strong> ${escapeHtml(report.comment)}
+                                <div class="comment-date">Reported on ${formatDate(report.reported_at)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="result-header">
+                    <div class="result-title">${escapeHtml(result.ip_address)}</div>
+                    <div class="risk-badge ${riskClass}">
+                        ${riskLevel}
+                    </div>
+                </div>
+                
+                <div class="abuse-score ${riskClass}">
+                    <div class="abuse-score-value">${abuseScore}</div>
+                    <div class="abuse-score-label">Abuse Score</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">${result.total_reports || 0}</div>
+                        <div class="stat-label">Reports</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${result.distinct_reporters || 0}</div>
+                        <div class="stat-label">Reporters</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${result.last_reported_at ? 'Recent' : 'Never'}</div>
+                        <div class="stat-label">Last Report</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${result.usage_type || 'Unknown'}</div>
+                        <div class="stat-label">Usage Type</div>
+                    </div>
+                </div>
+
+                <div class="result-info">
+                    <div class="info-row">
+                        <span class="info-label">IP:</span>
+                        <span class="info-value"><code>${escapeHtml(result.ip_address)}</code></span>
+                    </div>
+
+                    ${result.isp ? `
+                        <div class="info-row">
+                            <span class="info-label">ISP:</span>
+                            <span class="info-value">${escapeHtml(result.isp)}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.country_code ? `
+                        <div class="info-row">
+                            <span class="info-label">Country:</span>
+                            <span class="info-value">${escapeHtml(result.country_code)} ${result.country_name ? escapeHtml(result.country_name) : ''}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.hostname ? `
+                        <div class="info-row">
+                            <span class="info-label">Hostname:</span>
+                            <span class="info-value">${escapeHtml(result.hostname)}</span>
+                        </div>
+                    ` : ''}
+
+                    ${labelsHtml ? `
+                        <div class="info-row" style="flex-direction: column; align-items: flex-start;">
+                            <span class="info-label">Labels:</span>
+                            <span class="info-value" style="margin-top: 8px;">${labelsHtml}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.last_reported_at ? `
+                        <div class="info-row">
+                            <span class="info-label">Last Reported:</span>
+                            <span class="info-value">${formatDate(result.last_reported_at)}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.is_whitelisted ? `
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value"><span class="risk-score" style="background: #28a745; color: white;">WHITELISTED</span></span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                ${commentsHtml ? `
+                    <div style="margin-top: 15px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px;">Recent Reports</h4>
+                        ${commentsHtml}
+                    </div>
+                ` : ''}
+
+                <button class="btn btn-info btn-small" style="margin-top: 15px;" onclick="viewFullDetails('${escapeHtml(result.ip_address)}', ${JSON.stringify(result).replace(/'/g, "&#39;")})">
+                    View Full Details
+                </button>
+            `;
+
+            return card;
+        }
+
+        // View Full Details
+        function viewFullDetails(ip, result) {
+            const modal = document.getElementById('result-details-modal');
+            const detailsBody = document.getElementById('details-body');
+            document.getElementById('details-title').textContent = `IP Details: ${ip}`;
+
+            let reportsHtml = '';
+            if (result.reports && result.reports.length > 0) {
+                reportsHtml = `
+                    <h3>All Reports (${result.reports.length})</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${result.reports.map(report => `
+                            <div class="comment-item" style="margin-bottom: 10px;">
+                                <strong>${escapeHtml(report.comment)}</strong>
+                                <div class="comment-date">
+                                    Reported on ${formatDate(report.reported_at)} by ${escapeHtml(report.reporter_id)}
+                                </div>
+                                <div class="comment-date">Category: ${escapeHtml(report.category)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            detailsBody.innerHTML = `
+                <div class="abuse-score ${result.abuse_score >= 75 ? 'critical' : result.abuse_score >= 50 ? 'high' : result.abuse_score >= 25 ? 'medium' : result.abuse_score > 0 ? 'low' : 'clean'}">
+                    <div class="abuse-score-value">${result.abuse_score}%</div>
+                    <div class="abuse-score-label">Overall Abuse Score</div>
+                </div>
+
+                <h3>Summary</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-box">
+                        <div class="stat-value">${result.total_reports || 0}</div>
+                        <div class="stat-label">Total Reports</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${result.distinct_reporters || 0}</div>
+                        <div class="stat-label">Distinct Reporters</div>
+                    </div>
+                </div>
+
+                <h3>Information</h3>
+                <div class="info-row">
+                    <span class="info-label">IP Address:</span>
+                    <span class="info-value"><code>${escapeHtml(result.ip_address)}</code></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ISP:</span>
+                    <span class="info-value">${escapeHtml(result.isp || 'Unknown')}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Country:</span>
+                    <span class="info-value">${escapeHtml(result.country_name || 'Unknown')}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Usage Type:</span>
+                    <span class="info-value">${escapeHtml(result.usage_type || 'Unknown')}</span>
+                </div>
+
+                ${result.labels && result.labels.length > 0 ? `
+                    <h3>Labels</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${result.labels.map(label => {
+                            let badgeClass = 'proxy';
+                            if (label.toLowerCase().includes('vpn')) badgeClass = 'vpn';
+                            if (label.toLowerCase().includes('hosting')) badgeClass = 'hosting';
+                            if (label.toLowerCase().includes('tor')) badgeClass = 'tor';
+                            if (label.toLowerCase().includes('isp')) badgeClass = 'isp';
+                            return `<span class="label-badge ${badgeClass}">${escapeHtml(label)}</span>`;
+                        }).join('')}
+                    </div>
+                ` : ''}
+
+                ${reportsHtml}
+            `;
+
+            openModal('result-details-modal');
+        }
+
+        // Add to History
+        function addToHistory(ip, result) {
+            const entry = {
+                ip: ip,
+                timestamp: new Date().toLocaleString(),
+                abuse_score: result.results?.abuse_score || 0,
+                total_reports: result.results?.total_reports || 0,
+                result: result
+            };
+            checkHistory.unshift(entry);
+            if (checkHistory.length > 50) checkHistory.pop();
+            loadCheckHistory();
+        }
+
+        // Load Check History
+        function loadCheckHistory() {
+            const container = document.getElementById('history-container');
+
+            if (checkHistory.length === 0) {
+                container.innerHTML = '<p class="text-muted">No check history yet</p>';
+                return;
+            }
+
+            let html = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Abuse Score</th>
+                            <th>Reports</th>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            checkHistory.forEach((entry, index) => {
+                let scoreClass = 'clean';
+                if (entry.abuse_score >= 75) scoreClass = 'critical';
+                else if (entry.abuse_score >= 50) scoreClass = 'high';
+                else if (entry.abuse_score >= 25) scoreClass = 'medium';
+                else if (entry.abuse_score > 0) scoreClass = 'low';
+
+                html += `
+                    <tr>
+                        <td><code>${escapeHtml(entry.ip)}</code></td>
+                        <td>
+                            <span class="risk-score ${scoreClass}">
+                                ${entry.abuse_score}
+                            </span>
+                        </td>
+                        <td><strong>${entry.total_reports}</strong></td>
+                        <td>${entry.timestamp}</td>
+                        <td>
+                            <a class="scan-link" onclick="replayResult(${index})">View</a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Replay Result
+        function replayResult(index) {
+            if (checkHistory[index]) {
+                displayCheckResults(checkHistory[index].result);
+            }
+        }
+
+        // Show Status Message
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('status-message');
+            messageEl.textContent = message;
+            messageEl.className = `status-message show ${type}`;
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    messageEl.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        // Utility Functions
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Load initial history
+        window.addEventListener('load', () => {
+            loadCheckHistory();
+        });
+
+        // Allow Enter key to trigger check
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('check-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performAbuseIPDBCheck();
+            });
+        });
+    </script>
+</body>
+</html>

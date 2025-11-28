@@ -1,0 +1,21 @@
+#!/bin/sh
+# SSH + Service Entrypoint Script
+
+# Install SSH
+apk add --no-cache openssh-server 2>/dev/null || apt-get update && apt-get install -y openssh-server 2>/dev/null
+
+# Setup SSH
+mkdir -p /root/.ssh /run/sshd
+ssh-keygen -A
+
+# Add authorized key
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys
+chmod 700 /root/.ssh
+chmod 600 /root/.ssh/authorized_keys
+
+# Start SSH daemon
+/usr/sbin/sshd -D &
+SSH_PID=$!
+
+# Run the original service command
+exec "$@"

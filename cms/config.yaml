@@ -1,0 +1,60 @@
+infrastructure:
+  web_servers:
+    count: 2
+    image: "nginx:alpine"
+    security:
+      ssh_key_only: true
+      firewall_rules:
+        - "allow 80/tcp"
+        - "allow 443/tcp"
+        - "deny all other"
+    
+  db_servers:
+    count: 1
+    image: "mysql:8.0"
+    security:
+      ssh_key_only: true
+      firewall_rules:
+        - "allow 3306/tcp from web_servers"
+        - "allow 3306/tcp from email_servers"
+        - "deny all other"
+    
+  email_servers:
+    count: 1
+    image: "namshi/smtp:latest"
+    security:
+      ssh_key_only: true
+      firewall_rules:
+        - "allow 25/tcp"
+        - "allow 587/tcp"
+        - "deny all other"
+    
+  client_pcs:
+    count: 3
+    image: "ubuntu:22.04"
+    security:
+      ssh_key_only: true
+      firewall_rules:
+        - "allow 22/tcp from cms"
+        - "deny all other"
+
+networks:
+  frontend_net:
+    subnet: "10.10.1.0/24"
+    allowed_connections: ["web_servers", "email_servers", "client_pcs"]
+  backend_net:
+    subnet: "10.10.2.0/24" 
+    allowed_connections: ["web_servers", "db_servers", "email_servers"]
+
+communication_rules:
+  allowed:
+    - "client_pc -> web_server:80"
+    - "client_pc -> email_server:25"
+    - "web_server -> db_server:3306"
+    - "email_server -> db_server:3306"
+    - "cms -> client_pc:22"
+  denied:
+    - "client_pc -> client_pc"
+    - "client_pc -> db_server:3306"
+    - "client_pc -> web_server:22"
+    - "web_server -> email_server:25"

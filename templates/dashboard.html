@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS - Enhanced Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+
+        <header class="header">
+            <div class="header-content">
+                <h1>Enhanced Container Management System</h1>
+                <p class="subtitle">Infrastructure as Code • Deployment Versioning • Security Management</p>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="btn btn-info btn-small">Dashboard</a>
+                <a href="/virus-total" class="btn btn-info btn-small">VirusTotal</a>
+                <a href="/abuseipdb" class="btn btn-info btn-small">AbuseIPDB</a>
+                <a href="/ssh-manager" class="btn btn-info btn-small">SSH Manager</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+
+            <section class="status-bar">
+                <div class="status-item">
+                    <span class="status-label">System:</span>
+                    <span id="system-status" class="status-badge status-running">Running</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Containers:</span>
+                    <span id="container-count" class="status-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Deployment:</span>
+                    <span id="deployment-status" class="status-badge">Idle</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Health:</span>
+                    <span id="health-status" class="status-badge">Checking...</span>
+                </div>
+            </section>
+
+            <nav class="tabs" role="tablist">
+                <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="deployment" onclick="switchTab('deployment')">Deployment</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="health" onclick="switchTab('health')">Health & Monitoring</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="security" onclick="switchTab('security')">Security</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="ids" onclick="switchTab('ids')">IDS & Threats</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="versioning" onclick="switchTab('versioning')">Versioning</button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="configuration" onclick="switchTab('configuration')">Configuration</button>
+            </nav>
+
+            <section id="deployment" class="tab-content active" role="tabpanel" aria-labelledby="deployment-tab">
+                <div class="layout">
+                    <aside class="left-panel">
+                        <section class="panel-section">
+                            <h2>Deployment Controls</h2>
+
+                            <div class="control-group">
+                                <h3>Deploy Infrastructure</h3>
+                                <p class="description">Deploy complete infrastructure with all services.</p>
+                                <button id="deploy-btn" class="btn btn-primary btn-large" onclick="startDeployment()">
+                                    Deploy All
+                                </button>
+                            </div>
+
+                            <div class="control-group">
+                                <h3>Infrastructure Management</h3>
+                                <button id="create-client-btn" class="btn btn-success" onclick="openModal('create-client-modal')">
+                                    Create Client
+                                </button>
+                                <button id="cleanup-btn" class="btn btn-danger" onclick="performCleanup()">
+                                    Cleanup All
+                                </button>
+                            </div>
+
+                            <div class="control-group">
+                                <h3>Advanced Options</h3>
+                                <button id="check-config-btn" class="btn btn-info" onclick="checkConfigChanges()">
+                                    Check Config Changes
+                                </button>
+                                <button id="redeploy-btn" class="btn btn-warning" onclick="redeployOnConfigChange()">
+                                    Redeploy on Config Change
+                                </button>
+                                <button id="test-network-btn" class="btn btn-info" onclick="testNetworkConnectivity()">
+                                    Test Network Connectivity
+                                </button>
+                                <button id="show-all-logs-btn" class="btn btn-info" onclick="showAllLogs()">
+                                    Show All Logs
+                                </button>
+                            </div>
+                        </section>
+                    </aside>
+
+                    <aside class="right-panel">
+                        <section class="panel-section">
+                            <h2>Active Containers</h2>
+                            <div id="containers-list" class="containers-list">
+                                <div class="empty-state">
+                                    <p>No containers running</p>
+                                    <p class="text-muted">Deploy infrastructure to start</p>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+
+                <section class="logs-section">
+                    <h2>Deployment Logs</h2>
+                    <div class="logs-controls">
+                        <div class="logs-control-group">
+                            <button id="clear-logs-btn" class="btn btn-small" onclick="clearLogs()">Clear Logs</button>
+                            <button id="refresh-logs-btn" class="btn btn-small" onclick="refreshLogs()">Refresh</button>
+                            <input type="text" id="log-search" class="log-search-input" placeholder="Search logs..." onkeyup="filterLogs()">
+                        </div>
+                        <div class="logs-control-group">
+                            <label class="auto-scroll-label">
+                                <input type="checkbox" id="auto-scroll" checked>
+                                Auto-scroll
+                            </label>
+                            <span id="log-count" class="log-count">0 logs</span>
+                        </div>
+                    </div>
+                    <div id="logs-container" class="logs-container">
+                        <p class="text-muted">No logs yet</p>
+                    </div>
+                </section>
+            </section>
+
+            <section id="health" class="tab-content" role="tabpanel" aria-labelledby="health-tab">
+                <section class="panel-section">
+                    <h2>System Health & Monitoring</h2>
+
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="runHealthCheck()">
+                            Run Health Check Now
+                        </button>
+                    </div>
+
+                    <div id="health-report" class="health-report">
+                        <p class="text-muted">Click "Run Health Check Now" to get system health information</p>
+                    </div>
+
+                    <h3>Container Health Status</h3>
+                    <div id="container-health-list"></div>
+
+                    <h3>Auto-Restart Settings</h3>
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="auto-restart-toggle" checked>
+                            Enable automatic restart of unhealthy containers
+                        </label>
+                    </div>
+                </section>
+            </section>
+
+            <section id="security" class="tab-content" role="tabpanel" aria-labelledby="security-tab">
+                <section class="panel-section">
+                    <h2>Security Management</h2>
+
+                    <div class="control-group">
+                        <h3>Security Tools</h3>
+                        <p class="description">Apply security hardening and run audits.</p>
+                        <button id="harden-btn" class="btn btn-warning" onclick="performSecurityHardening()">
+                            Apply Security Hardening
+                        </button>
+                        <button id="audit-btn" class="btn btn-warning" onclick="performSecurityAudit()">
+                            Run Security Audit
+                        </button>
+                        <button id="connectivity-btn" class="btn btn-info" onclick="performConnectivityTest()">
+                            Test Network Connectivity
+                        </button>
+                    </div>
+
+                    <div id="security-report" class="security-report">
+                        <p class="text-muted">Run security tools to see detailed reports</p>
+                    </div>
+
+                    <h3>Firewall & Network Rules</h3>
+                    <div id="firewall-rules" class="firewall-rules">
+                        <p class="text-muted">Loading firewall configuration...</p>
+                    </div>
+                </section>
+            </section>
+
+            <section id="versioning" class="tab-content" role="tabpanel" aria-labelledby="versioning-tab">
+                <section class="panel-section">
+                    <h2>Deployment Versioning & Rollback</h2>
+
+                    <div class="control-group">
+                        <h3>Deployment History</h3>
+                        <button class="btn btn-info" onclick="loadDeploymentHistory()">
+                            Refresh History
+                        </button>
+                    </div>
+
+                    <div id="deployment-history-list" class="deployment-history">
+                        <p class="text-muted">Loading deployment history...</p>
+                    </div>
+
+                    <h3>Rollback to Previous Deployment</h3>
+                    <div id="rollback-options">
+                        <p class="text-muted">Select a deployment above and click rollback button</p>
+                    </div>
+
+                    <h3>Deployment Comparison</h3>
+                    <div class="control-group">
+                        <label>Compare between deployments to see what changed</label>
+                        <div id="comparison-results" class="comparison-results">
+                            <p class="text-muted">Select two deployments to compare</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <section id="ids" class="tab-content" role="tabpanel" aria-labelledby="ids-tab">
+                <section class="panel-section">
+                    <h2>Intrusion Detection System (IDS)</h2>
+
+                    <div class="layout">
+                        <aside class="left-panel">
+                            <section class="panel-section">
+                                <h3>IDS Controls</h3>
+
+                                <div class="control-group">
+                                    <button class="btn btn-primary" onclick="refreshIDSStatus()">
+                                        Refresh Status
+                                    </button>
+                                </div>
+
+                                <div class="control-group">
+                                    <h4>Model Status</h4>
+                                    <div id="ids-models-status">
+                                        <p class="text-muted">Loading...</p>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <h4>Web Server Tests</h4>
+                                    <button class="btn btn-info" onclick="generateNormalLogs()">
+                                        Normal Logs
+                                    </button>
+                                    <button class="btn btn-warning" onclick="generateSuspiciousLogs()">
+                                        Attack Logs
+                                    </button>
+                                </div>
+
+                                <div class="control-group">
+                                    <h4>Database Tests</h4>
+                                    <button class="btn btn-info" onclick="generateNormalDBLogs()">
+                                        Normal Queries
+                                    </button>
+                                    <button class="btn btn-warning" onclick="generateSuspiciousDBLogs()">
+                                        Attack Queries
+                                    </button>
+                                </div>
+
+                                <div class="control-group">
+                                    <h4>Email Server Tests</h4>
+                                    <button class="btn btn-info" onclick="generateNormalEmailLogs()">
+                                        Normal Emails
+                                    </button>
+                                    <button class="btn btn-warning" onclick="generateSuspiciousEmailLogs()">
+                                        Phishing Emails
+                                    </button>
+                                </div>
+
+                                <div class="control-group">
+                                    <h4>Alert Management</h4>
+                                    <button class="btn btn-danger" onclick="clearIDSAlerts()">
+                                        Clear All Alerts
+                                    </button>
+                                </div>
+                            </section>
+                        </aside>
+
+                        <aside class="right-panel">
+                            <section class="panel-section">
+                                <h2>IDS Statistics</h2>
+                                <div id="ids-statistics" class="stats-container">
+                                    <p class="text-muted">Loading statistics...</p>
+                                </div>
+                            </section>
+                        </aside>
+                    </div>
+
+                    <h3>Recent Alerts</h3>
+                    <div class="control-group">
+                        <input type="text" id="alert-filter" class="log-search-input" placeholder="Filter alerts by type or severity...">
+                        <button class="btn btn-small" onclick="filterAlertsUI()">Filter</button>
+                    </div>
+
+                    <div id="ids-alerts-list" class="alerts-container">
+                        <p class="text-muted">Loading alerts...</p>
+                    </div>
+                </section>
+            </section>
+
+            <section id="configuration" class="tab-content" role="tabpanel" aria-labelledby="configuration-tab">
+                <section class="panel-section">
+                    <h2>Infrastructure Configuration</h2>
+
+                    <div class="control-group">
+                        <h3>Current Configuration</h3>
+                        <button class="btn btn-info" onclick="loadConfiguration()">
+                            Load Configuration
+                        </button>
+                        <button class="btn btn-warning" onclick="validateConfiguration()">
+                            Validate Configuration
+                        </button>
+                    </div>
+
+                    <div id="config-display" class="config-display">
+                        <p class="text-muted">Click "Load Configuration" to view</p>
+                    </div>
+
+                    <h3>Configuration Versions</h3>
+                    <div id="config-versions-list">
+                        <button class="btn btn-info" onclick="loadConfigVersions()">
+                            Load Config Versions
+                        </button>
+                        <div id="versions-list" style="margin-top: 15px;"></div>
+                    </div>
+
+                    <h3>Configuration Changes</h3>
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="checkConfigChanges()">
+                            Check for Changes
+                        </button>
+                        <div id="config-changes-info" style="margin-top: 15px;"></div>
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div id="create-client-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Client</h2>
+                <button class="modal-close" onclick="closeModal('create-client-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-client-form">
+                    <div class="form-group">
+                        <label for="client-name">Client Name (optional):</label>
+                        <input type="text" id="client-name" name="name" placeholder="client-pc-4">
+                        <small>Leave blank for auto-generated name</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('create-client-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitCreateClient()">Create Client</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm Action</h2>
+                <button class="modal-close" onclick="closeModal('confirm-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button>
+                <button class="btn btn-danger" id="confirm-btn" onclick="executeConfirmation()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deployment-details-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="details-title">Deployment Details</h2>
+                <button class="modal-close" onclick="closeModal('deployment-details-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="deployment-details-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="details-rollback-btn" onclick="rollbackFromModal()" style="display:none;">
+                    Rollback to This
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('deployment-details-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="network-test-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>Network Connectivity Test Results</h2>
+                <button class="modal-close" onclick="closeModal('network-test-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="network-test-status" class="test-status-badge">Testing...</div>
+                <div id="network-test-logs" class="logs-container test-logs-container" style="max-height: 500px;">
+                    <p class="text-muted">Running tests...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('network-test-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="all-logs-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>All System Logs</h2>
+                <button class="modal-close" onclick="closeModal('all-logs-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="logs-tabs">
+                    <button class="logs-tab-btn active" onclick="switchLogsTab('deployment')">Deployment Logs</button>
+                    <button class="logs-tab-btn" onclick="switchLogsTab('containers')">Container Logs</button>
+                    <button class="logs-tab-btn" onclick="switchLogsTab('health')">Health Reports</button>
+                </div>
+
+                <div id="deployment-logs-tab" class="logs-tab-content active">
+                    <div class="logs-controls">
+                        <input type="text" id="deployment-logs-search" class="log-search-input" placeholder="Search deployment logs..." onkeyup="filterAllLogs('deployment')">
+                        <button class="btn btn-small" onclick="downloadLogs('deployment')">Download</button>
+                    </div>
+                    <div id="deployment-logs-display" class="logs-container" style="max-height: 600px;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+
+                <div id="container-logs-tab" class="logs-tab-content">
+                    <div class="logs-controls">
+                        <input type="text" id="container-logs-search" class="log-search-input" placeholder="Search container logs..." onkeyup="filterAllLogs('containers')">
+                        <button class="btn btn-small" onclick="downloadLogs('containers')">Download</button>
+                    </div>
+                    <div id="container-logs-display" class="logs-container" style="max-height: 600px;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+
+                <div id="health-logs-tab" class="logs-tab-content">
+                    <div class="logs-controls">
+                        <button class="btn btn-small" onclick="downloadLogs('health')">Download</button>
+                    </div>
+                    <div id="health-logs-display" class="logs-container" style="max-height: 600px;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('all-logs-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+*.cert
+
+# Logs
+*.log
+logs/
+*.pid
+*.sock
+
+# Runtime data
+*.pid
+server.pid
+server.log
+startup.log
+*.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+*.docker
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Health reports (generated dynamically)
+health_reports/
+
+# Deployment artifacts
+deployments/
+*.tar.gz
+*.zip
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Model files (if needed to be excluded)
+# models/*.pkl
+
+# Private keys and secrets
+keys/private*
+keys/*.pem
+*.key
+*.secret
+secrets/
+
+# OS specific
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Project specific
+__pycache__
+*.pyc
+config.local.yaml
+config.secrets.yaml
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# Generated files
+*.egg-info/
+dist/
+build/
+
+# OS temp files
+*.orig
+*.rej

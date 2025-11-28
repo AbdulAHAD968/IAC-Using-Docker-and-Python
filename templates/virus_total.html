@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirusTotal Scanner - CMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .virus-total-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .scan-section {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .input-group button {
+            padding: 10px 20px;
+        }
+
+        .scan-type-selector {
+            margin-bottom: 20px;
+        }
+
+        .scan-type-selector label {
+            margin-right: 20px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .scan-type-selector input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-card.threat {
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-card.clean {
+            border-left: 4px solid #28a745;
+        }
+
+        .result-card.suspicious {
+            border-left: 4px solid #ffc107;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-title {
+            word-break: break-all;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .threat-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .threat-badge.high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .threat-badge.medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .threat-badge.low {
+            background: #28a745;
+            color: white;
+        }
+
+        .result-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .info-value {
+            text-align: right;
+            color: #333;
+            max-width: 50%;
+            word-break: break-word;
+        }
+
+        .detection-summary {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .detection-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        .detection-stat span:last-child {
+            font-weight: bold;
+        }
+
+        .detections-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f8f9fa;
+            font-size: 12px;
+        }
+
+        .detection-item {
+            padding: 5px;
+            margin-bottom: 5px;
+            background: white;
+            border-left: 3px solid #dc3545;
+            padding-left: 8px;
+            border-radius: 2px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .history-table thead {
+            background: #007bff;
+            color: white;
+        }
+
+        .history-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .history-table .scan-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .history-table .scan-link:hover {
+            text-decoration: underline;
+        }
+
+        .threat-count {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+            background: #f0f0f0;
+        }
+
+        .threat-count.detected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .tabs-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .api-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #004085;
+        }
+
+        .api-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>VirusTotal Scanner</h1>
+                <p class="subtitle">Scan URLs and file hashes against 90+ antivirus engines</p>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="btn btn-info btn-small">Dashboard</a>
+                <a href="/virus-total" class="btn btn-info btn-small active">VirusTotal</a>
+                <a href="/abuseipdb" class="btn btn-info btn-small">AbuseIPDB</a>
+                <a href="/ssh-manager" class="btn btn-info btn-small">SSH Manager</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content virus-total-container">
+            <div class="api-info">
+                <strong>ℹ️ VirusTotal Integration</strong>
+                Powered by VirusTotal's comprehensive malware detection service. Get instant security analysis across 90+ antivirus engines and security vendors worldwide.
+            </div>
+
+            <!-- Status Messages -->
+            <div id="status-message" class="status-message"></div>
+
+            <!-- Scan Section -->
+            <section class="scan-section">
+                <h2>🔍 Scan for Threats</h2>
+                <p class="tabs-subtitle">Enter a URL or file hash to scan against VirusTotal database</p>
+
+                <div class="scan-type-selector">
+                    <label>
+                        <input type="radio" name="scan-type" value="url" checked>
+                        URL Scan
+                    </label>
+                    <label>
+                        <input type="radio" name="scan-type" value="hash">
+                        File Hash (MD5/SHA256)
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="scan-input" 
+                        placeholder="Enter URL (e.g., example.com) or file hash..."
+                    >
+                    <button class="btn btn-primary" onclick="performVirusTotalScan()">
+                        <span id="scan-btn-text">Scan</span>
+                        <span id="scan-spinner" class="loading-spinner" style="display: none; margin-left: 10px;"></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" style="display: none;">
+                <h2>📊 Scan Results</h2>
+                <div id="results-container" class="results-grid"></div>
+            </section>
+
+            <!-- History Section -->
+            <section class="history-section">
+                <h2>📜 Scan History</h2>
+                <button class="btn btn-info" onclick="loadScanHistory()">Refresh History</button>
+                <div id="history-container" style="margin-top: 20px;">
+                    <p class="text-muted">Loading scan history...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Result Details Modal -->
+    <div id="result-details-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="details-title">Scan Details</h2>
+                <button class="modal-close" onclick="closeModal('result-details-modal')">&times;</button>
+            </div>
+            <div class="modal-body" id="details-body">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('result-details-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = '/api';
+        let scanHistory = [];
+
+        // Scan Types
+        function getScanType() {
+            return document.querySelector('input[name="scan-type"]:checked').value;
+        }
+
+        // Format URL for scanning
+        function formatScanInput(input, scanType) {
+            if (scanType === 'url') {
+                // Add https:// if no protocol
+                if (!input.startsWith('http://') && !input.startsWith('https://')) {
+                    return 'https://' + input;
+                }
+                return input;
+            }
+            return input.trim();
+        }
+
+        // Perform VirusTotal Scan
+        async function performVirusTotalScan() {
+            const input = document.getElementById('scan-input').value.trim();
+            const scanType = getScanType();
+
+            if (!input) {
+                showMessage('Please enter a URL or file hash', 'error');
+                return;
+            }
+
+            const scanValue = formatScanInput(input, scanType);
+            
+            // Show loading state
+            document.getElementById('scan-btn-text').style.display = 'none';
+            document.getElementById('scan-spinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch(`${API_BASE}/virus-total-scan`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        scan_type: scanType,
+                        query: scanValue
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    displayScanResults(data);
+                    addToHistory(scanType, scanValue, data);
+                    showMessage('Scan completed successfully!', 'success');
+                } else {
+                    showMessage(data.error || 'Scan failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error performing scan: ' + error.message, 'error');
+            } finally {
+                document.getElementById('scan-btn-text').style.display = 'inline';
+                document.getElementById('scan-spinner').style.display = 'none';
+            }
+        }
+
+        // Display Scan Results
+        function displayScanResults(data) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = '';
+
+            if (data.results && Array.isArray(data.results)) {
+                data.results.forEach(result => {
+                    const card = createResultCard(result);
+                    resultsContainer.appendChild(card);
+                });
+            } else if (data.results) {
+                const card = createResultCard(data.results);
+                resultsContainer.appendChild(card);
+            }
+
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Create Result Card
+        function createResultCard(result) {
+            const card = document.createElement('div');
+            
+            // Determine threat level
+            let threatLevel = 'clean';
+            let threatBadgeClass = 'low';
+            if (result.detections && result.detections > 0) {
+                threatLevel = result.detections > 5 ? 'threat' : 'suspicious';
+                threatBadgeClass = result.detections > 5 ? 'high' : 'medium';
+            }
+
+            card.className = `result-card ${threatLevel}`;
+            
+            // Build detection list HTML
+            let detectionsHtml = '';
+            if (result.vendors && Array.isArray(result.vendors)) {
+                detectionsHtml = result.vendors.map(v => 
+                    `<div class="detection-item">
+                        <strong>${v.vendor}:</strong> ${v.detection}
+                    </div>`
+                ).join('');
+            } else if (result.vendors && typeof result.vendors === 'object') {
+                detectionsHtml = Object.entries(result.vendors)
+                    .map(([vendor, detection]) => 
+                        `<div class="detection-item">
+                            <strong>${vendor}:</strong> ${detection}
+                        </div>`
+                    ).join('');
+            }
+
+            card.innerHTML = `
+                <div class="result-header">
+                    <div class="result-title">${escapeHtml(result.query || 'Unknown')}</div>
+                    <div class="threat-badge ${threatBadgeClass}">
+                        ${result.detections || 0} Detections
+                    </div>
+                </div>
+                
+                <div class="result-info">
+                    <div class="detection-summary">
+                        <div class="detection-stat">
+                            <span>Detection Ratio:</span>
+                            <span>${result.detections || 0}/${result.total_vendors || '?'}</span>
+                        </div>
+                        <div class="detection-stat">
+                            <span>Scan Date:</span>
+                            <span>${formatDate(result.scan_date)}</span>
+                        </div>
+                        ${result.last_analysis_date ? `
+                            <div class="detection-stat">
+                                <span>Last Analysis:</span>
+                                <span>${formatDate(result.last_analysis_date)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${result.categories ? `
+                        <div class="info-row">
+                            <span class="info-label">Categories:</span>
+                            <span class="info-value">${escapeHtml(result.categories.join(', '))}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.last_submission_date ? `
+                        <div class="info-row">
+                            <span class="info-label">Submitted:</span>
+                            <span class="info-value">${formatDate(result.last_submission_date)}</span>
+                        </div>
+                    ` : ''}
+
+                    ${result.meaningful_name ? `
+                        <div class="info-row">
+                            <span class="info-label">Name:</span>
+                            <span class="info-value">${escapeHtml(result.meaningful_name)}</span>
+                        </div>
+                    ` : ''}
+
+                    ${detectionsHtml ? `
+                        <div class="info-row">
+                            <span class="info-label">Detections:</span>
+                        </div>
+                        <div class="detections-list">
+                            ${detectionsHtml}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <button class="btn btn-info btn-small" onclick="viewFullDetails('${escapeHtml(result.query || '')}', ${JSON.stringify(result).replace(/'/g, "&#39;")})">
+                    View Full Details
+                </button>
+            `;
+
+            return card;
+        }
+
+        // View Full Details
+        function viewFullDetails(query, result) {
+            const modal = document.getElementById('result-details-modal');
+            const detailsBody = document.getElementById('details-body');
+            document.getElementById('details-title').textContent = `Scan Details: ${query}`;
+
+            detailsBody.innerHTML = `
+                <div class="detection-summary">
+                    <div class="detection-stat">
+                        <span>URL/Hash:</span>
+                        <span>${escapeHtml(result.query)}</span>
+                    </div>
+                    <div class="detection-stat">
+                        <span>Status:</span>
+                        <span>${result.detections > 0 ? '🚨 Threats Detected' : '✅ Clean'}</span>
+                    </div>
+                    <div class="detection-stat">
+                        <span>Detection Ratio:</span>
+                        <span>${result.detections}/${result.total_vendors}</span>
+                    </div>
+                    <div class="detection-stat">
+                        <span>Scan Date:</span>
+                        <span>${formatDate(result.scan_date)}</span>
+                    </div>
+                </div>
+
+                <h3>All Detections</h3>
+                <div class="detections-list" style="max-height: none;">
+                    ${result.vendors && Array.isArray(result.vendors) ? 
+                        result.vendors.map(v => 
+                            `<div class="detection-item">
+                                <strong>${v.vendor}:</strong> ${v.detection}
+                            </div>`
+                        ).join('') :
+                        (result.vendors && typeof result.vendors === 'object' ?
+                            Object.entries(result.vendors).map(([vendor, detection]) =>
+                                `<div class="detection-item">
+                                    <strong>${vendor}:</strong> ${detection}
+                                </div>`
+                            ).join('') :
+                            '<p class="text-muted">No detailed detections available</p>')
+                    }
+                </div>
+
+                ${result.categories ? `
+                    <h3 style="margin-top: 20px;">Categories</h3>
+                    <p>${escapeHtml(result.categories.join(', '))}</p>
+                ` : ''}
+            `;
+
+            openModal('result-details-modal');
+        }
+
+        // Add to History
+        function addToHistory(scanType, query, result) {
+            const entry = {
+                type: scanType,
+                query: query,
+                timestamp: new Date().toLocaleString(),
+                detections: result.results?.detections || 0,
+                result: result
+            };
+            scanHistory.unshift(entry);
+            if (scanHistory.length > 50) scanHistory.pop();
+            loadScanHistory();
+        }
+
+        // Load Scan History
+        function loadScanHistory() {
+            const container = document.getElementById('history-container');
+
+            if (scanHistory.length === 0) {
+                container.innerHTML = '<p class="text-muted">No scan history yet</p>';
+                return;
+            }
+
+            let html = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Query</th>
+                            <th>Detections</th>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            scanHistory.forEach((entry, index) => {
+                html += `
+                    <tr>
+                        <td><strong>${entry.type.toUpperCase()}</strong></td>
+                        <td><code style="font-size: 12px;">${escapeHtml(entry.query)}</code></td>
+                        <td>
+                            <span class="threat-count ${entry.detections > 0 ? 'detected' : ''}">
+                                ${entry.detections}
+                            </span>
+                        </td>
+                        <td>${entry.timestamp}</td>
+                        <td>
+                            <a class="scan-link" onclick="replayResult(${index})">View</a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Replay Result
+        function replayResult(index) {
+            if (scanHistory[index]) {
+                displayScanResults(scanHistory[index].result);
+            }
+        }
+
+        // Show Status Message
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('status-message');
+            messageEl.textContent = message;
+            messageEl.className = `status-message show ${type}`;
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    messageEl.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        // Utility Functions
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Load initial history
+        window.addEventListener('load', () => {
+            loadScanHistory();
+        });
+    </script>
+</body>
+</html>

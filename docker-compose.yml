@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  web-server-1:
+    image: nginx:alpine
+    container_name: web-server-1
+    networks:
+      - frontend_net
+      - backend_net
+    ports:
+      - "8080:80"
+      - "2201:22"
+    restart: unless-stopped
+    command: /bin/sh -c "apk add --no-cache openssh-server && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd && nginx -g 'daemon off;'"
+    labels:
+      - "cms.service=web"
+      - "cms.environment=production"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  web-server-2:
+    image: nginx:alpine
+    container_name: web-server-2
+    networks:
+      - frontend_net
+      - backend_net
+    ports:
+      - "8081:80"
+      - "2202:22"
+    restart: unless-stopped
+    command: /bin/sh -c "apk add --no-cache openssh-server && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd && nginx -g 'daemon off;'"
+    labels:
+      - "cms.service=web"
+      - "cms.environment=production"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db-server-1:
+    image: mysql:8.0
+    container_name: db-server-1
+    networks:
+      - backend_net
+    ports:
+      - "2203:22"
+    command: bash -c "apt-get update && apt-get install -y openssh-server && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd && docker-entrypoint.sh mysqld"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-securepassword123}
+      MYSQL_DATABASE: ${DB_NAME:-app_db}
+      MYSQL_USER: ${DB_USER:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-app_password}
+      MYSQL_ROOT_HOST: '%'
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/mysql
+    labels:
+      - "cms.service=database"
+      - "cms.environment=production"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  email-server-1:
+    image: namshi/smtp:latest
+    container_name: email-server-1
+    networks:
+      - frontend_net
+      - backend_net
+    ports:
+      - "1025:25"
+      - "1026:587"
+      - "2204:22"
+    restart: unless-stopped
+    command: sh -c "apt-get update && apt-get install -y openssh-server && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd -D &  docker-entrypoint.sh"
+    labels:
+      - "cms.service=email"
+      - "cms.environment=production"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "-w", "2", "localhost", "25"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  client-pc-1:
+    image: ubuntu:22.04
+    container_name: client-pc-1
+    networks:
+      - frontend_net
+    ports:
+      - "2211:22"
+    restart: unless-stopped
+    command: /bin/bash -c "apt-get update && apt-get install -y curl netcat-openbsd openssh-server openssh-client && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd -D"
+    labels:
+      - "cms.service=client"
+      - "cms.environment=production"
+    stdin_open: true
+    tty: true
+
+  client-pc-2:
+    image: ubuntu:22.04
+    container_name: client-pc-2
+    networks:
+      - frontend_net
+    ports:
+      - "2212:22"
+    restart: unless-stopped
+    command: /bin/bash -c "apt-get update && apt-get install -y curl netcat-openbsd openssh-server openssh-client && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd -D"
+    labels:
+      - "cms.service=client"
+      - "cms.environment=production"
+    stdin_open: true
+    tty: true
+
+  client-pc-3:
+    image: ubuntu:22.04
+    container_name: client-pc-3
+    networks:
+      - frontend_net
+    ports:
+      - "2213:22"
+    restart: unless-stopped
+    command: /bin/bash -c "apt-get update && apt-get install -y curl netcat-openbsd openssh-server openssh-client && mkdir -p /root/.ssh /run/sshd && ssh-keygen -A && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxOc+zEyGZoRVnEkVymHoIKqRNHaoZrEjZwyS1pK3wTcdjIFIY2YHs/z5ET/G4tSyreXrlUtJM8IZ8jdi2y83xvdmEwhL1dMHhvkDdemnIifHQj5p4eFV+gusPxQ+xLul+0kuvgK96ZV0E+V1ov9m+EHppE2ZiZuXOHB7qzdQ9AGcuUf3gS2HzNlD7W8HaATYjDbSivzBeeAKPK+CXtt2gsmrj9WjMzZpsx3sQF7I/NGF52hmQqe+Y/b3Qd1B6ACW8uoVl/w7Qj4zdrQD6xQnAlCUtWaH9uAimVqOpxw0tj6Bq2yzutyaPEQzMYglzXgqFOMoi4K9IqE80f5r5b/t0oShqDza2u74dn47rpiP+ZH/8sul3vMCuOpQKIxH5Oyx6j77tY8mYbWz4aFGtggVXuqu4eFDIH2KC97BXhcG3cjsOs2Nlp35lB/c7HajYNwG50J/E8XHpBbXzPXcJCB4Etvo5yBOJGs0Q3GK5EpXGtIi73AzamD+rzZvTOZS7vCvKy4Wdhk1prU02GArgN0e0YMGZruhOhXOdlBpACD9HIWvIh00H+9HGzYb96CZ8VmeB5F/d8qD0nqk4z3y7pMz4cCEdNvcI7Aut78cH/DrBBAMMrLofupc3kQ+ATrCNqt7s7TscdqwcJRZSCEfYlYrfNFEcP6TS2K8gDEayY+M86Q== ahad@vbox' > /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys && /usr/sbin/sshd && tail -f /dev/null"
+    labels:
+      - "cms.service=client"
+      - "cms.environment=production"
+    stdin_open: true
+    tty: true
+
+networks:
+  frontend_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24
+  backend_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.2.0/24
+
+volumes:
+  db_data:
+    driver: local
+
