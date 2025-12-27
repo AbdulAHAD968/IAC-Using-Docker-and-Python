@@ -323,7 +323,7 @@ Include the following in your report:
 ## Contact
 
 For security issues or questions:
-- Email: security@enhanced-cms.local
+- Email: ab.zarinc@gmail.com
 - GPG Key: Available upon request
 - Response time: 24-48 hours for critical issues
 
